@@ -186,25 +186,32 @@ var respond = true;
 app.get('/GetFriendStatus', function(httpRequest, httpResponse)
 {
     var publicFriendCount = 0;
-    //async.times(friendCount, function(i, cb) {
+
     // Calculate the Steam API URL we want to use
-  //  var url = 'http://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/?key=C771F5AA72C620510410E84F55D8BAB3';
+    //var url = 'http://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/?key=C771F5AA72C620510410E84F55D8BAB3';
 
-   var url = 'http://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/?key=C771F5AA72C620510410E84F55D8BAB3&steamid=76561197960434622';
+   //var url = 'http://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/?key=C771F5AA72C620510410E84F55D8BAB3&steamid=76561197960434622';
 
-  //  for (var i = 0; i < 1; i++)
-    //{
-      //url += `&steamid=${friendsAll[i]}`;
-    //}
-    url += `&format=json`;
+   var sender = true;
+   // start our url loop and request loop
+    async.times(friendCount, function(i, cb) {
+    //for (var i = 0; i < friendCount; i++) {
+    var url = 'http://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/?key=C771F5AA72C620510410E84F55D8BAB3';
+    url += `&steamid=${friendsAll[i]}&format=json`;
+
+    console.log(url);
     console.log("step 3");
     var response = httpResponse;
     var json;
     request.get(url, function(error, steamHttpResponse, steamHttpBody) {
         // Once we get the body of the steamHttpResponse, send it to our client
         // as our own httpResponse
-        response.setHeader('Content-Type', 'application/json');
-        response.send(steamHttpBody);
+        if (sender === true)
+        {
+          response.setHeader('Content-Type', 'application/json');
+          response.send(steamHttpBody);
+          sender = false;
+        }
         json = JSON.parse(steamHttpBody);
         //console.log(json.response.count);
         console.log(typeof(json.response));
@@ -216,7 +223,7 @@ app.get('/GetFriendStatus', function(httpRequest, httpResponse)
           console.log("Put into array");
         }
     });
-  //});
+  });
 });
 
 
