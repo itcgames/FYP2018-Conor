@@ -213,14 +213,14 @@ app.get('/GetFriendStatus', function(httpRequest, httpResponse)
           sender = false;
         }
         json = JSON.parse(steamHttpBody);
-        //console.log(json.response.count);
-        console.log(typeof(json.response));
         //checks if its empty
         var count = Object.keys(json.response).length;
         console.log(count);
         if (count !== 0)
         {
           console.log("Put into array");
+          friendsPublic[publicFriendCount] = friendsAll[i];
+          publicFriendCount++;
         }
     });
   });
