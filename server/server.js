@@ -108,12 +108,24 @@ app.get('/steam/civ5achievements', function(httpRequest, httpResponse) {
     });
 });
 
-
-
+// VARIABLE LIST //
+// Step 1
 var playerGamesTotal
 var playerGamesTimeTen = [];
+var playerArrayLength = 0;
+var arrayHolder = 0;
+
+// Step2
 var friendsAll =[];
+var friendCount = 0;
+
+// Step 3
 var friendsPublic =[];
+var respond = true;
+var publicFriendCount = 0;
+var sender = true;
+
+
 ///
 // Step 1
 // Get the owned games of a player
@@ -122,6 +134,7 @@ var friendsPublic =[];
 // Save those games into an array called playerGamesTimeTen
 ///
   app.get('/GetOwnedGames', function(httpRequest, httpResponse) {
+      console.log("Step 1");
       // Calculate the Steam API URL we want to use
       //var url = 'http://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/?key=C771F5AA72C620510410E84F55D8BAB3&steamid=76561197960434622&steamid=76561197960265740&format=json'
       var url = 'http://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/?key=C771F5AA72C620510410E84F55D8BAB3&steamid=76561197960434622&format=json';
@@ -132,24 +145,22 @@ var friendsPublic =[];
           httpResponse.send(steamHttpBody);
           var json = JSON.parse(steamHttpBody);
 
-          for (var i = 0; i < json.response.game_count; i++)
-          {
-             var arrayHolder = 0
+          async.times(json.response.game_count, function(i, cb) {
              this.playerGamesTotal = json.response.games[i];
-             if (this.playerGamesTotal.playtime_forever >= 600)
+             //1 day = 1440
+             if (this.playerGamesTotal.playtime_forever >= 60)
              {
-               arrayHolder++;
-               //console.log(this.playerGames.appid);
                playerGamesTimeTen[arrayHolder] = this.playerGamesTotal.appid;
-               console.log(playerGamesTimeTen[arrayHolder]);
+               arrayHolder++;
+               playerArrayLength++;
+               //console.log(playerGamesTimeTen[arrayHolder]);
 
              }
-          }
-
+          });
       });
   });
 
-var friendCount = 0;
+
 ///
 // Step 2
 // Get the players friend list
@@ -157,6 +168,7 @@ var friendCount = 0;
 // save length of the array for phase 3
 ///
 app.get('/GetfriendsList', function(httpRequest, httpResponse) {
+    console.log("Step 2");
     // Calculate the Steam API URL we want to use
     var url = 'http://api.steampowered.com/ISteamUser/GetFriendList/v0001/?key=C771F5AA72C620510410E84F55D8BAB3&steamid=76561197960434622&relationship=all';
     request.get(url, function(error, steamHttpResponse, steamHttpBody) {
@@ -165,7 +177,6 @@ app.get('/GetfriendsList', function(httpRequest, httpResponse) {
         httpResponse.setHeader('Content-Type', 'application/json');
         httpResponse.send(steamHttpBody);
         var json = JSON.parse(steamHttpBody);
-
         for (var i = 0; i < json.friendslist.friends.length; i++)
         {
            friendsAll[i] = json.friendslist.friends[i].steamid;
@@ -174,7 +185,7 @@ app.get('/GetfriendsList', function(httpRequest, httpResponse) {
     });
 });
 
-var respond = true;
+
 ///
 // step 3
 // Check if a friend is public
@@ -185,22 +196,17 @@ var respond = true;
 
 app.get('/GetFriendStatus', function(httpRequest, httpResponse)
 {
-    var publicFriendCount = 0;
 
     // Calculate the Steam API URL we want to use
     //var url = 'http://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/?key=C771F5AA72C620510410E84F55D8BAB3';
-
    //var url = 'http://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/?key=C771F5AA72C620510410E84F55D8BAB3&steamid=76561197960434622';
-
-   var sender = true;
+    console.log("step 3");
    // start our url loop and request loop
     async.times(friendCount, function(i, cb) {
-    //for (var i = 0; i < friendCount; i++) {
     var url = 'http://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/?key=C771F5AA72C620510410E84F55D8BAB3';
     url += `&steamid=${friendsAll[i]}&format=json`;
 
-    console.log(url);
-    console.log("step 3");
+    //console.log(url);
     var response = httpResponse;
     var json;
     request.get(url, function(error, steamHttpResponse, steamHttpBody) {
@@ -215,10 +221,9 @@ app.get('/GetFriendStatus', function(httpRequest, httpResponse)
         json = JSON.parse(steamHttpBody);
         //checks if its empty
         var count = Object.keys(json.response).length;
-        console.log(count);
         if (count !== 0)
         {
-          console.log("Put into array");
+          //console.log("Put into array");
           friendsPublic[publicFriendCount] = friendsAll[i];
           publicFriendCount++;
         }
@@ -227,128 +232,105 @@ app.get('/GetFriendStatus', function(httpRequest, httpResponse)
 });
 
 
-/// Test 2
+// Step 4 Variable List
+var send4 = true;
+var friendGames = [];
+var friendGamesTimeTen = [];
+var gameCount = 0;
+var add = true;
+
 ///
-app.get('/Biglist', function(httpRequest, httpResponse) {
+// step 4
+// Get the games of the public friends
+// Save the most played ones into an array
+// Check for duplicates
+///
+app.get('/GetPublicOwnedGames', function(httpRequest, httpResponse) {
     // Calculate the Steam API URL we want to use
-    var url = 'http://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/?key=C771F5AA72C620510410E84F55D8BAB3&steamid=76561197960434622&format=json'
-    //var url = 'http://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/?key=C771F5AA72C620510410E84F55D8BAB3&steamid=76561197960434622&format=json';
+    console.log("Step 4");
+    async.times(publicFriendCount, function(i, cb)
+    {
+    var url = 'http://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/?key=C771F5AA72C620510410E84F55D8BAB3';
+
+    url += `&steamid=${friendsPublic[i]}&format=json`;
     request.get(url, function(error, steamHttpResponse, steamHttpBody) {
         // Once we get the body of the steamHttpResponse, send it to our client
         // as our own httpResponse
-        httpResponse.setHeader('Content-Type', 'application/json');
-        httpResponse.send(steamHttpBody);
-        var json = JSON.parse(steamHttpBody);
-
-        for (var i = 0; i < json.response.game_count; i++)
+        if (send4 === true)
         {
-           var arrayHolder = 0
-           this.playerGamesTotal = json.response.games[i];
-           if (this.playerGamesTotal.playtime_forever >= 600)
-           {
-             arrayHolder++;
-             //console.log(this.playerGames.appid);
-             playerGamesTimeTen[arrayHolder] = this.playerGamesTotal.appid;
-             console.log(playerGamesTimeTen[arrayHolder]);
-
-           }
-        }
-
-    });
-});
-
-
-
-//Test
-app.get('/testStatus', function(httpRequest, httpResponse) {
-    // Calculate the Steam API URL we want to use
-    //var url = 'http://api.steampowered.com/ISteamUser/GetPlayerSummaries/v0002/?key=C771F5AA72C620510410E84F55D8BAB3&steamids=';
-    var url = 'http://api.steampowered.com/ISteamUser/GetPlayerSummaries/v0002/?key=C771F5AA72C620510410E84F55D8BAB3&steamids=76561197960508417';
-    //var arrayLength = len(this.friendsAll.length);
-    //for (var i = 0; i < friendsAll.length; i++)
-  //  {
-    //  url += `${friendsAll[i]},`;
-    //}
-    request.get(url, function(error, steamHttpResponse, steamHttpBody) {
-        // Once we get the body of the steamHttpResponse, send it to our client
-        // as our own httpResponse
-        httpResponse.setHeader('Content-Type', 'application/json');
-        httpResponse.send(steamHttpBody);
-        var json = JSON.parse(steamHttpBody);
-
-        for (var i = 0; i < json.response.players.length; i++)
-        {
-          if ( json.response.players[i].communityvisibilitystate === 3)
-          {
-            friendsPublic[i] = json.response.players[i].steamid;
-          }
-        }
-        console.log(friendsPublic.length);
-    });
-});
-
-
-///
-// Step 4
-// Getting the owned games of te puplic friends
-// Use the public friends steam id array to cycle to mark down the most common owned games
-// call to get the game list of the friends
-  app.get('/GetFriendOwnedGames', function(httpRequest, httpResponse) {
-      // Calculate the Steam API URL we want to use
-      //for (var i; i <= fri)
-      var url = 'http://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/?key=C771F5AA72C620510410E84F55D8BAB3&steamid=76561197960508417';
-      //url += `${friendsPublic[0]}&format=json`;
-      console.log(friendsPublic[3])
-      //var arrayLength = len(this.friendsAll.length);
-      //for (var i = 0; i < friendsPublic.length; i++)
-      //{
-      //  url += `${friendsAll[i]}&format=json`;
-      //}
-      request.get(url, function(error, steamHttpResponse, steamHttpBody) {
-          // Once we get the body of the steamHttpResponse, send it to our client
-          // as our own httpResponse
           httpResponse.setHeader('Content-Type', 'application/json');
           httpResponse.send(steamHttpBody);
-          var json = JSON.parse(steamHttpBody);
-
-          for (var i = 0; i < json.response.game_count; i++)
+          send4 = false;
+        }
+        var json = JSON.parse(steamHttpBody);
+        //console.log("Public friend Count: ", publicFriendCount);
+        for (var j = 0; j < json.response.game_count; j++)
+        {
+          add = true;
+          var friendGame1 = json.response.games[j];
+          if (friendGame1.playtime_forever > 20160)
           {
-              var arrayHolder = 0
-             this.playerGames = json.response.games[i];
-             if (this.playerGames.playtime_forever >= 600)
-             {
-               arrayHolder++;
-               //console.log(this.playerGames.appid);
-               friends[arrayHolder] = this.playerGames.appid;
-               console.log(friends[arrayHolder]);
-
-             }
+            for (var count = 0; count < friendGamesTimeTen.length; count++)
+            {
+              if (friendGame1.appid === friendGamesTimeTen[count])
+              {
+                add = false;
+              }
+            }
+            if (add === true)
+            {
+              //console.log(friendGame1.playtime_forever);
+              friendGamesTimeTen[gameCount] = friendGame1.appid;
+              //console.log("App id: ", friendGamesTimeTen[gameCount], ': ', friendGame1.playtime_forever);
+              gameCount++;
+            }
           }
-
-
-      });
+        }
+    });
   });
+});
 
 
-
-// ```
+///step 5
+// Comparing the information to check for matches
 //
-// Combine the previous two techniques (variables in paths, request package).
-//
-// Open a web browser to [http://localhost:4000/steam/game/8930/achievements]
-// (http://localhost:4000/steam/game/8930/achievements) then try changing `8930`
-// (Civ5) to `292030` (Witcher 3).
-//
-// ```js
-
-app.get('/steam/game/:appid/achievements', function(httpRequest, httpResponse) {
+///
+app.get('/Compairing', function(httpRequest, httpResponse) {
+    console.log("Step 5");
     // Calculate the Steam API URL we want to use
-    var url = 'http://api.steampowered.com/ISteamNews/GetNewsForApp/v0002/?appid=440&count=3&maxlength=300&format=json' +
-        httpRequest.params.appid;
+    //var url = 'http://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/?key=C771F5AA72C620510410E84F55D8BAB3&steamid=76561197960434622&steamid=76561197960265740&format=json'
+    var url = 'http://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/?key=C771F5AA72C620510410E84F55D8BAB3&steamid=76561197960434622&format=json';
     request.get(url, function(error, steamHttpResponse, steamHttpBody) {
-        var json = JSON.parse(steamHttpBody)
-        console.log(json.appnews.appid)
-        //
+        // Once we get the body of the steamHttpResponse, send it to our client
+        // as our own httpResponse
+        httpResponse.setHeader('Content-Type', 'application/json');
+        httpResponse.send(steamHttpBody);
+        var json = JSON.parse(steamHttpBody);
+
+        for (var j = 0; j < playerArrayLength; j++)
+        {
+          //console.log(playerGamesTimeTen[0]);
+          for ( var c = 0; c < gameCount; c++)
+          {
+            if (playerGamesTimeTen[j] === friendGamesTimeTen[c])
+            {
+              console.log("Match: ", playerGamesTimeTen[j], " VS ", friendGamesTimeTen[c]);
+            }
+          }
+        }
+        console.log(gameCount);
+    });
+});
+
+///
+// Step 6
+///
+app.get('/steam/civ5achievements', function(httpRequest, httpResponse) {
+    // Calculate the Steam API URL we want to use
+    var url = 'http://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/?key=C771F5AA72C620510410E84F55D8BAB3&steamid=76561197960508417&format=json';
+    request.get(url, function(error, steamHttpResponse, steamHttpBody) {
+        // Once we get the body of the steamHttpResponse, send it to our client
+        // as our own httpResponse
         httpResponse.setHeader('Content-Type', 'application/json');
         httpResponse.send(steamHttpBody);
     });
@@ -425,31 +407,6 @@ var bodyParser = require('body-parser');
 
 app.use(bodyParser.text());
 
-// ```
-//
-// You'll need to use Postman to test out this example, because web browsers
-// don't give users an easy way to make an HTTP POST.
-//
-// Just to show how this works, we'll just write the HTTP POST body to the
-// console.  So, open up Postman and make an HTTP POST to
-// [http://localhost:4000/frank-blog](http://localhost:4000/frank-blog).
-//
-// To constuct your request in Postman, click the 'GET' dropdown next
-// to the URL and change to POST, then click the 'BODY' tab and choose
-// the 'raw' radio button.  Change the content type to 'Text'.  Type some text
-// in the body, then send the request.
-//
-// ```js
-
-app.post('/frank-blog', function(httpRequest, httpResponse) {
-    console.log(httpRequest.body);
-    // We need to respond to the request so the web browser knows
-    // something happened.
-    // If you've got nothing better to say, it's considered good practice to
-    // return the original POST body.
-    httpResponse.status(200).send('Posted today:\n\n' + httpRequest.body);
-});
-
 ///
 // Start the server
 // Outout the listening host
@@ -457,6 +414,3 @@ app.post('/frank-blog', function(httpRequest, httpResponse) {
 var port = 4000;
 var server = app.listen(port);
 console.log('Listening on port ' + port);
-
-
-// (https://gist.github.com/johnchristopherjones/c6c8928d2ffa5ccbda6a))
