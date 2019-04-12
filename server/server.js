@@ -1,26 +1,4 @@
-// How do I use the Steam API in my web app?
 
-// 1.  Type `node server.js` to start the server.
-
-// Get started
-// ---------------
-// All of the code you'll see belongs in a single javascript file,
-// which we'll call `server.js`.
-//
-// By convention, you want to put all your 'require' statements at the top.
-// However, to avoid introducing too much detail prematurely, I will only
-// require packages as they are needed.
-//
-// We're going to want an HTTP server.  The HTTP server will receive
-// incoming HTTP requests from browsers and send an HTTP responses in return.
-//
-// HTTP is a simple protocol composed entirely of text.  However, we're going
-// to side-step a lot of tedious text manipulation by using [Express],
-// which wraps HTTP up into familiar Javascript objects and events.
-//
-// [Express]: http://expressjs.com
-//
-// ```js
 
 var express = require('express');
 
@@ -37,14 +15,11 @@ var app = express();
 // DOM events in the browser.  Similar to jQuery's `.click()` method, the
 // `.get()` method lets you bind an event handler to an HTTP GET request event.
 //
-// However, the `.get()` method is a little more powerful.  It lets you bind
-// different event handlers for different URLs.  For example, the following
-// handler responds to GET requests for the root-level URL (e.g., index.html).
 //
-// ```js
+///
 
 
-// ```
+///
 //
 // Our handler is passed two objects: the original httpRequest and a
 // new httpResponse.  The new httpResponse is a brand new object that hasn't been
@@ -52,66 +27,25 @@ var app = express();
 // before finishing up and sending it on its way with the `.send()` method.
 // The `.send()` method can used all by itself by passing it the
 // content you want to send.
-//
-// And here's a GET event handler for a different URL.
-//
+///
 
 
-// ```
-//
-//
-// Add parameters to the path
-// --------------------------
-// Express also lets us define variables in the path.  These variables
-// will be stored by Express in the `httpRequest.params` object.
-// We can then use those variables to construct a response.
-// Open a web browser to [http://localhost:4000/steam/hello/Rachel]
-// (http://localhost:4000/steam/hello/Rachel).
-//
-// Try changing "Rachel" in the URL in the browser.
-//
-// ```js
+///
+// Basic Name Demo
 
 app.get('/hello/:name', function(httpRequest, httpResponse) {
     var name = httpRequest.params.name;
     httpResponse.send('Hello, ' + name + '!');
 });
 
-// ```
-//
-// Changing tracks from Express for a moment to introduce the 'request' package.
-//
-// We can use the `request` package to make our own HTTP requests.  For example,
-// make an HTTP request to the Steam API to download the Civ5 achievements.
-//
-// ```js
 
 var request = require('request');
 
-// Now we can try something a little fancier.  We can use the `request` package
-// to send our own HTTP requests to third parties.  We can use the third-party's
-// response to help construct our own response.
-//
-// Open a web browser to [http://localhost:4000/steam/civ5achievements]
-// (http://localhost:4000/steam/civ5achievements).
-//
-// ```js
-
-app.get('/steam/civ5achievements', function(httpRequest, httpResponse) {
-    // Calculate the Steam API URL we want to use
-    var url = 'http://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/?key=C771F5AA72C620510410E84F55D8BAB3&steamid=76561197960508417&format=json';
-    request.get(url, function(error, steamHttpResponse, steamHttpBody) {
-        // Once we get the body of the steamHttpResponse, send it to our client
-        // as our own httpResponse
-        httpResponse.setHeader('Content-Type', 'application/json');
-        httpResponse.send(steamHttpBody);
-    });
-});
 
 // VARIABLE LIST //
 // Step 1
 var playerGamesTotal
-var playerGamesTimeTen = [];
+let playerGamesTimeTen = [];
 var playerArrayLength = 0;
 var arrayHolder = 0;
 
@@ -136,8 +70,9 @@ var sender = true;
   app.get('/GetOwnedGames', function(httpRequest, httpResponse) {
       console.log("Step 1");
       // Calculate the Steam API URL we want to use
-      //var url = 'http://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/?key=C771F5AA72C620510410E84F55D8BAB3&steamid=76561197960434622&steamid=76561197960265740&format=json'
-      var url = 'http://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/?key=C771F5AA72C620510410E84F55D8BAB3&steamid=76561197960434622&format=json';
+      // test case
+      // var url = 'http://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/?key=C771F5AA72C620510410E84F55D8BAB3&steamid=76561197960434622&format=json';
+      var url = 'http://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/?key=03E5D0505D13270838159A7F1A8BADBD&steamid=76561198035120652&format=json';
       request.get(url, function(error, steamHttpResponse, steamHttpBody) {
           // Once we get the body of the steamHttpResponse, send it to our client
           // as our own httpResponse
@@ -148,12 +83,11 @@ var sender = true;
           async.times(json.response.game_count, function(i, cb) {
              this.playerGamesTotal = json.response.games[i];
              //1 day = 1440
-             if (this.playerGamesTotal.playtime_forever >= 60)
+             if (this.playerGamesTotal.playtime_forever >= 1440)
              {
                playerGamesTimeTen[arrayHolder] = this.playerGamesTotal.appid;
                arrayHolder++;
                playerArrayLength++;
-               //console.log(playerGamesTimeTen[arrayHolder]);
 
              }
           });
@@ -170,7 +104,9 @@ var sender = true;
 app.get('/GetfriendsList', function(httpRequest, httpResponse) {
     console.log("Step 2");
     // Calculate the Steam API URL we want to use
-    var url = 'http://api.steampowered.com/ISteamUser/GetFriendList/v0001/?key=C771F5AA72C620510410E84F55D8BAB3&steamid=76561197960434622&relationship=all';
+    // test
+    // var url = 'http://api.steampowered.com/ISteamUser/GetFriendList/v0001/?key=C771F5AA72C620510410E84F55D8BAB3&steamid=76561197960434622&relationship=all';
+    var url = 'http://api.steampowered.com/ISteamUser/GetFriendList/v0001/?key=03E5D0505D13270838159A7F1A8BADBD&steamid=76561198035120652&relationship=all';
     request.get(url, function(error, steamHttpResponse, steamHttpBody) {
         // Once we get the body of the steamHttpResponse, send it to our client
         // as our own httpResponse
@@ -182,6 +118,7 @@ app.get('/GetfriendsList', function(httpRequest, httpResponse) {
            friendsAll[i] = json.friendslist.friends[i].steamid;
            friendCount++;
         }
+        console.log("Friends Count: ", friendCount);
     });
 });
 
@@ -198,12 +135,10 @@ app.get('/GetFriendStatus', function(httpRequest, httpResponse)
 {
 
     // Calculate the Steam API URL we want to use
-    //var url = 'http://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/?key=C771F5AA72C620510410E84F55D8BAB3';
-   //var url = 'http://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/?key=C771F5AA72C620510410E84F55D8BAB3&steamid=76561197960434622';
     console.log("step 3");
    // start our url loop and request loop
     async.times(friendCount, function(i, cb) {
-    var url = 'http://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/?key=C771F5AA72C620510410E84F55D8BAB3';
+    var url = 'http://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/?key=03E5D0505D13270838159A7F1A8BADBD';
     url += `&steamid=${friendsAll[i]}&format=json`;
 
     //console.log(url);
@@ -214,8 +149,8 @@ app.get('/GetFriendStatus', function(httpRequest, httpResponse)
         // as our own httpResponse
         if (sender === true)
         {
-          response.setHeader('Content-Type', 'application/json');
-          response.send(steamHttpBody);
+          httpResponse.setHeader('Content-Type', 'application/json');
+          httpResponse.send(steamHttpBody);
           sender = false;
         }
         json = JSON.parse(steamHttpBody);
@@ -225,6 +160,7 @@ app.get('/GetFriendStatus', function(httpRequest, httpResponse)
         {
           //console.log("Put into array");
           friendsPublic[publicFriendCount] = friendsAll[i];
+          //console.log(friendsPublic[publicFriendCount]);
           publicFriendCount++;
         }
     });
@@ -250,7 +186,7 @@ app.get('/GetPublicOwnedGames', function(httpRequest, httpResponse) {
     console.log("Step 4");
     async.times(publicFriendCount, function(i, cb)
     {
-    var url = 'http://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/?key=C771F5AA72C620510410E84F55D8BAB3';
+    var url = 'http://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/?key=03E5D0505D13270838159A7F1A8BADBD';
 
     url += `&steamid=${friendsPublic[i]}&format=json`;
     request.get(url, function(error, steamHttpResponse, steamHttpBody) {
@@ -291,15 +227,17 @@ app.get('/GetPublicOwnedGames', function(httpRequest, httpResponse) {
 });
 
 
+var matchCount = 0;
 ///step 5
 // Comparing the information to check for matches
-//
+// Just uses a plaace holder httpResponse
+// Runs a set of nested for loops compairing the two arrays of mined data
 ///
 app.get('/Compairing', function(httpRequest, httpResponse) {
     console.log("Step 5");
     // Calculate the Steam API URL we want to use
     //var url = 'http://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/?key=C771F5AA72C620510410E84F55D8BAB3&steamid=76561197960434622&steamid=76561197960265740&format=json'
-    var url = 'http://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/?key=C771F5AA72C620510410E84F55D8BAB3&steamid=76561197960434622&format=json';
+    var url = 'http://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/?key=03E5D0505D13270838159A7F1A8BADBD&steamid=76561197960434622&format=json';
     request.get(url, function(error, steamHttpResponse, steamHttpBody) {
         // Once we get the body of the steamHttpResponse, send it to our client
         // as our own httpResponse
@@ -315,93 +253,20 @@ app.get('/Compairing', function(httpRequest, httpResponse) {
             if (playerGamesTimeTen[j] === friendGamesTimeTen[c])
             {
               console.log("Match: ", playerGamesTimeTen[j], " VS ", friendGamesTimeTen[c]);
+              matchCount++;
             }
           }
         }
+        //Prints out the results
+        console.log(matchCount);
         console.log(gameCount);
     });
 });
 
-///
-// Step 6
-///
-app.get('/steam/civ5achievements', function(httpRequest, httpResponse) {
-    // Calculate the Steam API URL we want to use
-    var url = 'http://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/?key=C771F5AA72C620510410E84F55D8BAB3&steamid=76561197960508417&format=json';
-    request.get(url, function(error, steamHttpResponse, steamHttpBody) {
-        // Once we get the body of the steamHttpResponse, send it to our client
-        // as our own httpResponse
-        httpResponse.setHeader('Content-Type', 'application/json');
-        httpResponse.send(steamHttpBody);
-    });
-});
-
-// ```
-//
-//
-// Host static files
-// -----------------
-// What about your static files like `index.html` and `my-angular-app.js`?
-// You might expect from the preceding that we'd need to bind event handlers
-// for every path.  Well, maybe we can get clever and use those parameters
-// in the path.  We'd need to learn how to read files from the filesystem
-// and… ugh.  Yep, We can totally do that.
-//
-// No, we're not going to do that.
-//
-// This is such a common problem that Express has included
-// a piece of software to handle it.  This software is called
-// `express.static`.  If you call `express.static('public')`, Express
-// writes an event handler for you to serve up static files, if they exist,
-// in the 'public' folder.  All you need to do is to tell Express when to
-// use it.  To tell express when to to call the new handler, use `app.use`.
-//
-// After you call `app.use`, files like 'public/index.html' can be accessed
-// in a web browser at [http://localhost:4000/static/index.html]
-// (http://localhost:4000/static/index.html).
-//
-// ```js
 
 app.use('/', express.static('public'));
 
-// ```
-//
-//
-// ### Why `/static`?
-//
-// You could totally just use `/`.  It's your choice.
-// However, it's a good practice to place static files under a different path.
-// If you accidentally name a file in a way that matches a path that's handled
-// by one of your HTTP event handlers, the file wins.
-// But, you don't really want to have to remember that.
-// Careful file naming can prevent these problems.
-//
-//
-// ### Why `app.use`; why not `app.get`?
-//
-// The handlers that can be passed to `app.use` are a bit fancier that what
-// we've been writing.  They need to know more about Express' innards and they
-// get executed before the HTTP event handlers that we've been writing.
-// In fact, they can do some neat pre-processing on
-// the incoming HTTP requests before our event handlers see them.  After
-// using `app.use` with `express.static`, Express makes a new decision when
-// an incoming HTTP request comes in:
-//
-// > IF there is a file at the requested path, respond with it;
-// > IF NOT, try to use one of our event handlers.
-//
-// It would take a lot of extra work to put this decision into every `.get()`
-// event handler.  So, `app.use` saves us a ton of work.
-//
-//
-// What was httpRequest for?
-// -------------------------
-// What about that httpRequest parameter?  We haven't done much with it yet.
-// Typically HTTP GET requests don't have a body, but that's not the case
-// with POST and PUT.  When a web browser sends new data to the server,
-// they place that new data in the body of the HTTP POST or HTTP PUT request.
-//
-// ```js
+
 
 var bodyParser = require('body-parser');
 
